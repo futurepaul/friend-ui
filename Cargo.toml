@@ -1,0 +1,7 @@
+[package]
+name = "friendui"
+version = "0.1.0"
+authors = ["futurepaul"]
+
+[dependencies]
+termion = "1.5.1"
