@@ -34,9 +34,9 @@ struct PrettyString {
 }
 
 impl PrettyString {
-    fn new(text: &str, fg: color::Rgb, bg: color::Rgb) -> PrettyString {
+    fn new(text:String, fg: color::Rgb, bg: color::Rgb) -> PrettyString {
         PrettyString {
-            text: String::from(text),
+            text,
             fg,
             bg,
         }
@@ -73,10 +73,18 @@ impl <R, W: Write> Window <R, W> {
     fn draw_buffer(&mut self, buffer: &Buffer) {
         use Command::*;
         let mut y = buffer.y;
+        //line is a PrettyString
         for line in &buffer.content {
-
             self.draw_command(Goto(buffer.x, y));
-            self.draw_command(Write(line.draw_pretty().clone()));
+            if line.text.len() as u16 <= buffer.width {
+                self.draw_command(Write(line.draw_pretty().clone()));
+            } else {
+                let dotdotdot = String::from("...");
+                let shorter_string = line.text.get(0..17).unwrap().to_owned();
+                let short_plus_dots = shorter_string + &dotdotdot;
+                let short_pretty = PrettyString::new(short_plus_dots,line.fg,line.bg);
+                self.draw_command(Write(short_pretty.draw_pretty().clone()));
+            }
             y += 1;
 
         }
@@ -122,10 +130,11 @@ fn main() {
     let black = color::Rgb(0,0,0);
 
     let mut p_strings = Vec::new();
-    p_strings.push(PrettyString::new("P Line 1", white, black));
-    p_strings.push(PrettyString::new("P Line 2", white, dark_grey));
-    p_strings.push(PrettyString::new("P Line 3", white, black));
-    p_strings.push(PrettyString::new("P Line 4", white, black));
+    p_strings.push(PrettyString::new("P Line 1".to_owned(), white, black));
+    p_strings.push(PrettyString::new("P Line 2 this line is really long so it should get clipped off".to_owned(), white, dark_grey));
+    p_strings.push(PrettyString::new("P Line 3 10 14 17 20 more".to_owned(), white, black));
+    p_strings.push(PrettyString::new("This one should be20".to_owned(), white, black));
+    p_strings.push(PrettyString::new("P Line 4".to_owned(), white, black));
 
     let mut buffer = Buffer {
         width: 20,
